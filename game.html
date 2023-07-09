@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>卡牌翻翻乐</title>
+
+    <style>
+      /* 添加游戏区域的样式 */
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background:repeating-linear-gradient(to right,#daffce,#ffe9b0);
+      }
+      .game-area {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 5px;
+      }
+      .card {
+        width: 120px;
+        height: 160px;
+        cursor: pointer;
+        background-image: url("pic10.jpg");
+        background-size: cover;
+        transition: transform 0.5s ease; /* 添加翻转动画的过渡效果 */
+        transform-style: preserve-3d; /* 启用3D变换效果 */
+        border: 1px dashed black;
+      }
+      .card.flipped {
+        transform: rotateY(180deg); /* 翻转卡牌 */
+      }
+      .countdown {
+        font-family:Arial, Helvetica, sans-serif;
+      }
+      #start-button {
+        transform: scale(1.1); /* 将按钮放大1.1倍 */
+        font-size: 20px; /* 将字体大小设置为20像素 */
+        border:1px dashed black;
+        border-radius: 50px;
+        padding:2px 10px;
+      }
+    </style>
+
+  </head>
+  <body>
+
+  <div class="container">
+    <h1 id="c">卡牌翻翻乐</h1>
+    <b style="font-size: large;">倒计时:</b>
+    <b><div id="countdown">30</div></b>
+    <br/><button id="start-button">开始游戏</button><br/>
+    <div class="game-area"></div>
+  </div>
+
+    <script>
+      const leftText = document.getElementById("c");
+      leftText.addEventListener("click", () => {
+        alert('游戏目标：\n找到所有对应的卡牌!\n玩家每次可以翻开两张牌,若一样,则两张牌将始终处于正面,否则,再次翻转为背面.\n当所有卡牌配对成功游戏结束~')
+      });
+
+      //卡牌栈，储存已翻的卡牌
+      let cardStack = [];
+
+      // 获取按钮和游戏区域的元素
+      const startButton = document.getElementById("start-button");// 获取按钮
+      const gameArea = document.querySelector(".game-area");// 获取游戏区域
+      const countdownDisplay = document.getElementById("countdown");// 获取倒计时
+      let countdown = 30;// 存储倒计时初始值
+      let countdownInterval;// 存储倒计时的计时器
+
+      // 当点击开始游戏按钮后会触发startCountdown函数执行
+      startButton.addEventListener("click", startCountdown);
+
+      // 开始游戏
+      function startCountdown() {
+        startButton.disabled = true;// 禁用了"开始游戏"按钮
+        countdownDisplay.style.display = "block";// 倒计时显示区域的样式设置为可见
+        countdownInterval = setInterval(updateCountdown, 1000);
+        // 每隔1秒钟调用updateCountdown()函数更新倒计时的显示
+      }
+
+      // 更新倒计时
+      function updateCountdown() {
+        countdown--;// 将倒计时变量减1
+        countdownDisplay.textContent = countdown;// 将倒计时的显示更新为倒计时初始值
+        
+        // 计时到0
+        if (countdown === 0) {
+          clearInterval(countdownInterval);// 清除倒计时
+          alert("啊哦！时间结束了请重新来过~");// 倒计时结束弹窗
+          setTimeout(() => {
+            location.reload();
+          }, 1000); // 1秒后刷新页面
+        }
+      }
+      
+      // 当点击开始游戏按钮后会触发startGame函数执行
+      startButton.addEventListener("click", startGame);
+
+      // 游戏开始函数
+      function startGame() {
+        startButton.style.display = "none";// 隐藏按钮
+        const cards = generateCards();// 生成翻牌子的元素
+        cards.sort(() => Math.random() - 0.5);// 打乱卡牌顺序
+      /*通过使用sort()方法对cards数组进行排序来打乱卡牌的顺序。
+      sort()方法接受一个比较函数作为参数，该函数返回一个随机数减去0.5的结果。
+      这样做的目的是通过比较随机数的正负来随机改变数组元素的顺序。
+      这样，每次调用sort()方法时，卡牌的顺序都会被打乱。*/
+      cards.forEach((card) => gameArea.appendChild(card));// 将翻牌子的元素添加到游戏区域中
+    }
+
+      // 生成翻牌子的元素
+      function generateCards() {
+        const cards = [];// 存储生成的翻牌子元素
+        const backImage = "pic10.jpg";// 使用同一张背面朝上的图片
+
+        // 生成一组翻牌子的元素
+        for (let i = 0; i < 8; i++) { // 使用一个循环来生成8对翻牌子的元素
+
+          // 对于每一对翻牌子，分别命名为card1和card2
+          const card1 = createCard();
+          card1.classList.add("card");
+          const frontImage1 = `pic${(i % 9) + 1}.jpg`;
+          // 第一个操作数除以第二个操作数后计算余数，模运算符%来确保生成的图片路径在1到9之间
+          card1.style.backgroundImage = `url(${backImage}), url(${frontImage1})`;
+          /*
+          *将背面图片和正面图片的路径设置为元素的背景图,
+          *当卡牌被翻转时，能够显示出正面图片。
+          */
+          card1.initBackground = card1.style.backgroundImage; //保存初始背景图
+          card1.realBackground = frontImage1; //保存真实背景图
+          cards.push(card1);// 将card1添加到cards数组中
+
+          //const card2 = document.createElement("div");
+          const card2 = createCard();
+          card2.classList.add("card");
+          const frontImage2 = `pic${(i % 9) + 1}.jpg`;
+          card2.style.backgroundImage = `url(${backImage}), url(${frontImage2})`;
+          card2.initBackground = card2.style.backgroundImage; //保存初始背景图
+          card2.realBackground = frontImage2; //保存真实背景图
+          cards.push(card2);// 将card2添加到cards数组中
+        }
+        return cards;
+      }
+
+      // 创建卡牌元素
+      function createCard() {
+        const card = document.createElement("div");// 创建一个<div>元素并将其赋值给变量card
+        card.classList.add("card");// 为卡片元素添加名为"card"的类
+        card.addEventListener("click", handleClick); // 添加点击事件
+        card.style.transformStyle = "preserve-3d"; // 添加3D变换效果
+        return card;//返回创建的卡片元素card
+      }
+
+      // 翻转卡牌
+      function flipCard(dom) {
+         /* 
+         * 此处将dom而非event作为参数，
+         * 是因为在handleCardStack()函数中也需要调用flipCard()函数，
+         * 且实参取自于cardStack数组，该实参无target属性
+         */
+        dom.classList.toggle("flipped"); // 切换类名
+
+        //根据卡牌判断是否处于正面，决定元素采用哪张背景图
+        if (!dom.ifReal) {
+
+          //非正面，则将背景图设为正面
+          dom.style.backgroundImage = dom.style.backgroundImage.slice(17);
+          //将背景图路径前缀部分去除，保留从第17个字符开始部分，可将背景图切换为正面图。
+          dom.ifReal = true;
+          /* dom.ifReal属性用于表示卡片元素的状态是否为真实正面
+          true将卡片元素的状态设置为真实正面*/
+
+        } else {
+
+          //正面，则将背景图设为负面
+          dom.style.backgroundImage = dom.initBackground;
+          //将初始背景图路径赋值给dom.style.backgroundImage，实现将背景图切换为初始背景图
+          dom.ifReal = false;// 将卡片元素的状态设置为非真实正面
+        }
+      }
+
+      //卡牌栈操作
+      function handleCardStack(event) {
+
+        //将被点击的牌推入卡牌栈
+        cardStack.push(event.target);
+
+        if (cardStack.length === 2) {
+          if (cardStack[0].realBackground === cardStack[1].realBackground) {
+
+            // 取消对这两个卡片元素的点击事件的监听，两张牌相同，不再翻转
+            cardStack[0].removeEventListener("click", handleClick);
+            cardStack[1].removeEventListener("click", handleClick);
+
+            // 检查是否所有卡牌都已匹配成功
+            if (document.querySelectorAll(".card:not(.flipped)").length === 0) {
+              alert("游戏结束，恭喜您顺利通关！");// 显示弹窗
+              setTimeout(() => {
+                location.reload();
+              }, 0); // 0秒后刷新页面
+              }
+          } else {
+            //将卡牌翻回背面
+            flipCard(cardStack[0]);
+            flipCard(cardStack[1]);
+          }
+          //清空卡牌栈
+          cardStack = [];
+        }
+      }
+
+      //专门处理卡牌点击操作的函数，包含了【翻转卡牌】以及【卡牌栈操作】
+      function handleClick(event) {
+        flipCard(event.target);//翻转卡牌
+
+        //执行卡牌栈操作
+        setTimeout(() => {
+          handleCardStack(event);
+        }, 400); //延迟400ms达到视觉上延迟翻转的效果
+      }
+    </script>
+
+  </body>
+</html>
